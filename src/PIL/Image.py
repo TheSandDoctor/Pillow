@@ -751,7 +751,7 @@ class Image(object):
         data = []
         while True:
             l, s, d = e.encode(bufsize)
-            data.append(d)
+           # data.append(d) # to enable large image downloads
             if s:
                 break
         if s < 0:
