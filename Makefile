@@ -50,15 +50,17 @@ help:
 	@echo "  upload-test        build and upload sdists to test.pythonpackages.com"
 
 inplace: clean
-	python setup.py develop build_ext --inplace
+	python3 setup.py develop build_ext --inplace
 
 install:
 	python setup.py install
 	python selftest.py
 
 install-no-test:
-	python setup.py install
-	# python selftest.py
+	python3 setup.py install
+
+install-no-test-2:
+	CFLAGS="-coverage" python3 setup.py build_ext install
 
 install-coverage:
 	CFLAGS="-coverage" python setup.py build_ext install

@@ -41,7 +41,7 @@ import warnings
 from . import ImageMode, TiffTags, __version__, _plugins
 from ._binary import i8, i32le
 from ._util import deferred_error, isPath, isStringType, py3
-from .FileFormatError import FileFormatError
+#from .FormatError import FileFormatError
 
 try:
     import builtins
@@ -69,6 +69,11 @@ class DecompressionBombWarning(RuntimeWarning):
 class DecompressionBombError(Exception):
     pass
 
+class FileFormatError(Exception):
+    def __init__(self, data):
+        self.data = data
+    def __str__(self):
+        return repr(self.data)
 
 # Limit to around a quarter gigabyte for a 24 bit (3 bpp) image
 MAX_IMAGE_PIXELS = int(1024 * 1024 * 1024 // 4 // 3)
