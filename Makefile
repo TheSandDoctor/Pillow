@@ -56,6 +56,10 @@ install:
 	python setup.py install
 	python selftest.py
 
+install-no-test:
+	python setup.py install
+	# python selftest.py
+
 install-coverage:
 	CFLAGS="-coverage" python setup.py build_ext install
 	python selftest.py

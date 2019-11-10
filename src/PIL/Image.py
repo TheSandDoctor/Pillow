@@ -34,7 +34,6 @@ import struct
 import sys
 import tempfile
 import warnings
-import FileFormatError
 
 # VERSION was removed in Pillow 6.0.0.
 # PILLOW_VERSION was removed in Pillow 7.0.0.
@@ -42,6 +41,7 @@ import FileFormatError
 from . import ImageMode, TiffTags, __version__, _plugins
 from ._binary import i8, i32le
 from ._util import deferred_error, isPath, isStringType, py3
+from .FileFormatError import FileFormatError
 
 try:
     import builtins
