@@ -12,9 +12,9 @@ class TestFileWmf(PillowTestCase):
                 # Currently, support for WMF/EMF is Windows-only
                 im.load()
                 # Compare to reference rendering
-                imref = Image.open("Tests/images/drawing_emf_ref.png")
-                imref.load()
-                self.assert_image_similar(im, imref, 0)
+                with Image.open("Tests/images/drawing_emf_ref.png") as imref:
+                    imref.load()
+                    self.assert_image_similar(im, imref, 0)
 
         # Test basic WMF open and rendering
         with Image.open("Tests/images/drawing.wmf") as im:
@@ -22,9 +22,9 @@ class TestFileWmf(PillowTestCase):
                 # Currently, support for WMF/EMF is Windows-only
                 im.load()
                 # Compare to reference rendering
-                imref = Image.open("Tests/images/drawing_wmf_ref.png")
-                imref.load()
-                self.assert_image_similar(im, imref, 2.0)
+                with Image.open("Tests/images/drawing_wmf_ref.png") as imref:
+                    imref.load()
+                    self.assert_image_similar(im, imref, 2.0)
 
     def test_register_handler(self):
         class TestHandler:
@@ -52,6 +52,17 @@ class TestFileWmf(PillowTestCase):
         # Round down
         with Image.open("Tests/images/drawing_roundDown.emf") as im:
             self.assertEqual(im.info["dpi"], 1426)
+
+    def test_load_set_dpi(self):
+        with Image.open("Tests/images/drawing.wmf") as im:
+            self.assertEquals(im.size, (82, 82))
+
+            if hasattr(Image.core, "drawwmf"):
+                im.load(144)
+                self.assertEquals(im.size, (164, 164))
+
+                with Image.open("Tests/images/drawing_wmf_ref_144.png") as expected:
+                    self.assert_image_similar(im, expected, 2.0)
 
     def test_save(self):
         im = hopper()

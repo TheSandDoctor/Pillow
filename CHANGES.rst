@@ -5,6 +5,66 @@ Changelog (Pillow)
 7.0.0 (unreleased)
 ------------------
 
+- Allow loading of WMF images at a given DPI #4311
+  [radarhere]
+
+- Added reduce operation #4251
+  [homm]
+
+- Raise ValueError for io.StringIO in Image.open #4302
+  [radarhere, hugovk]
+
+- Fix thumbnail geometry when DCT scaling is used #4231
+  [homm, radarhere]
+
+- Use default DPI when exif provides invalid x_resolution #4147
+  [beipang2, radarhere]
+
+- Change default resize resampling filter from NEAREST to BICUBIC #4255
+  [homm]
+
+- Fixed black lines on upscaled images with the BOX filter #4278
+  [homm]
+
+- Better thumbnail aspect ratio preservation #4256
+  [homm]
+
+- Add La mode packing and unpacking #4248
+  [homm]
+
+- Include tests in coverage reports #4173
+  [hugovk]
+
+- Handle broken Photoshop data #4239
+  [radarhere]
+
+- Raise a specific exception if no data is found for an MPO frame #4240
+  [radarhere]
+
+- Fix Unicode support for PyPy #4145
+  [nulano]
+
+- Drop support for EOL Python 2.7 #4109
+  [hugovk, radarhere, jdufresne]
+
+- Added UnidentifiedImageError #4182
+  [radarhere, hugovk]
+
+- Remove deprecated __version__ from plugins #4197
+  [hugovk, radarhere]
+
+- Fixed freeing unallocated pointer when resizing with height too large #4116
+  [radarhere]
+
+- Copy info in Image.transform #4128
+  [radarhere]
+
+- Corrected DdsImagePlugin setting info gamma #4171
+  [radarhere]
+
+- Depends: Update libtiff to 4.1.0 #4195, Tk Tcl to 8.6.10 #4229, libimagequant to 2.12.6 #4318
+  [radarhere]
+
 - Improve handling of file resources #3577
   [jdufresne]
 
