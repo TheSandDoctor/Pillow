@@ -2,8 +2,17 @@
 Changelog (Pillow)
 ==================
 
-7.0.0 (unreleased)
+7.0.0 (2020-01-02)
 ------------------
+
+- Drop support for EOL Python 2.7 #4109
+  [hugovk, radarhere, jdufresne]
+
+- Fix rounding error on RGB to L conversion #4320
+  [homm]
+
+- Exif writing fixes: Rational boundaries and signed/unsigned types #3980
+  [kkopachev, radarhere]
 
 - Allow loading of WMF images at a given DPI #4311
   [radarhere]
@@ -44,9 +53,6 @@ Changelog (Pillow)
 - Fix Unicode support for PyPy #4145
   [nulano]
 
-- Drop support for EOL Python 2.7 #4109
-  [hugovk, radarhere, jdufresne]
-
 - Added UnidentifiedImageError #4182
   [radarhere, hugovk]
 
@@ -86,10 +92,28 @@ Changelog (Pillow)
 - Changed default frombuffer raw decoder args #1730
   [radarhere]
 
-6.2.1 (2019-10-21)
+6.2.2 (2020-01-02)
 ------------------
 
 - This is the last Pillow release to support Python 2.7 #3642
+
+- Overflow checks for realloc for tiff decoding. CVE-2020-5310
+  [wiredfool, radarhere]
+
+- Catch SGI buffer overrun. CVE-2020-5311
+  [radarhere]
+
+- Catch PCX P mode buffer overrun. CVE-2020-5312
+  [radarhere]
+
+- Catch FLI buffer overrun. CVE-2020-5313
+  [radarhere]
+
+- Raise an error for an invalid number of bands in FPX image. CVE-2019-19911
+  [wiredfool, radarhere]
+
+6.2.1 (2019-10-21)
+------------------
 
 - Add support for Python 3.8 #4141
   [hugovk]

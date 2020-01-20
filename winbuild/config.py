@@ -30,9 +30,9 @@ libs = {
         "dir": "zlib-1.2.11",
     },
     "jpeg": {
-        "url": "http://www.ijg.org/files/jpegsr9c.zip",
-        "filename": "jpegsr9c.zip",
-        "dir": "jpeg-9c",
+        "url": "http://www.ijg.org/files/jpegsr9d.zip",
+        "filename": "jpegsr9d.zip",
+        "dir": "jpeg-9d",
     },
     "tiff": {
         "url": "ftp://download.osgeo.org/libtiff/tiff-4.1.0.tar.gz",
@@ -77,9 +77,9 @@ libs = {
         "version": "8.6.10",
     },
     "webp": {
-        "url": "http://downloads.webmproject.org/releases/webp/libwebp-1.0.3.tar.gz",
-        "filename": "libwebp-1.0.3.tar.gz",
-        "dir": "libwebp-1.0.3",
+        "url": "http://downloads.webmproject.org/releases/webp/libwebp-1.1.0.tar.gz",
+        "filename": "libwebp-1.1.0.tar.gz",
+        "dir": "libwebp-1.1.0",
     },
     "openjpeg": {
         "url": "https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz",
