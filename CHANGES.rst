@@ -2,6 +2,18 @@
 Changelog (Pillow)
 ==================
 
+7.1.0 (unreleased)
+------------------
+
+- Add support for shooting situation Exif IFD tags #4398
+  [alexagv]
+
+- Handle multiple and malformed JPEG APP13 markers #4370
+  [homm]
+
+- Depends: Update libwebp to 1.1.0 #4342, libjpeg to 9d #4352
+  [radarhere]
+
 7.0.0 (2020-01-02)
 ------------------
 
