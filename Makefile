@@ -55,12 +55,6 @@ install:
 	python3 setup.py install
 	python3 selftest.py
 
-install-no-test:
-	python3 setup.py install
-
-install-no-test-2:
-	CFLAGS="-coverage" python3 setup.py build_ext install
-
 install-coverage:
 	CFLAGS="-coverage" python3 setup.py build_ext install
 	python3 selftest.py

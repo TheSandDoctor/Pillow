@@ -719,13 +719,47 @@ class Image:
         data = []
         while True:
             l, s, d = e.encode(bufsize)
-           # data.append(d) # to enable large image downloads
+            data.append(d)
             if s:
                 break
         if s < 0:
             raise RuntimeError("encoder error %d in tobytes" % s)
 
         return b"".join(data)
+
+    def tobytes_null(self, encoder_name="raw", *args):
+        """
+        Verify image is not corrupt.
+
+        :param encoder_name: What encoder to use.  The default is to
+                             use the standard "raw" encoder.
+        :param args: Extra arguments to the encoder.
+        :rtype: None
+		:raises OSError: If image corrupt
+		:raises UnidentifiedImageError: If file not recognized image format
+        """
+
+        # may pass tuple instead of argument list
+        if len(args) == 1 and isinstance(args[0], tuple):
+            args = args[0]
+
+        if encoder_name == "raw" and args == ():
+            args = self.mode
+
+        self.load()
+
+        # unpack data
+        e = _getencoder(self.mode, encoder_name, args)
+        e.setimage(self.im)
+
+        bufsize = max(65536, self.size[0] * 4)  # see RawEncode.c
+
+        while True:
+            l, s, d = e.encode(bufsize)
+            if s:
+                break
+        if s < 0:
+            raise RuntimeError("encoder error %d in tobytes" % s)
 
     def tostring(self, *args, **kw):
         raise NotImplementedError(
