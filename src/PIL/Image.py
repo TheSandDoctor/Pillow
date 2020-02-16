@@ -1131,7 +1131,7 @@ class Image:
 
         absolute_values = (abs(x1 - x0), abs(y1 - y0))
 
-        _decompression_bomb_check(absolute_values)
+        #_decompression_bomb_check(absolute_values)
 
         return im.crop((x0, y0, x1, y1))
 
@@ -2763,7 +2763,7 @@ def _decompression_bomb_check(size):
 
     pixels = size[0] * size[1]
 
-    if pixels > 2 * MAX_IMAGE_PIXELS:
+    if pixels > 200 * MAX_IMAGE_PIXELS:
         raise DecompressionBombError(
             "Image size (%d pixels) exceeds limit of %d pixels, "
             "could be decompression bomb DOS attack." % (pixels, 2 * MAX_IMAGE_PIXELS)
@@ -2841,7 +2841,7 @@ def open(fp, mode="r"):
                 elif result:
                     fp.seek(0)
                     im = factory(fp, filename)
-                    _decompression_bomb_check(im.size)
+                    #_decompression_bomb_check(im.size)
                     return im
             except (SyntaxError, IndexError, TypeError, struct.error):
                 # Leave disabled by default, spams the logs with image
