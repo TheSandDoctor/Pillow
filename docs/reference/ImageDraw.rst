@@ -20,14 +20,14 @@ Example: Draw a gray cross over an image
 
     from PIL import Image, ImageDraw
 
-    im = Image.open("hopper.jpg")
+    with Image.open("hopper.jpg") as im:
 
-    draw = ImageDraw.Draw(im)
-    draw.line((0, 0) + im.size, fill=128)
-    draw.line((0, im.size[1], im.size[0], 0), fill=128)
+        draw = ImageDraw.Draw(im)
+        draw.line((0, 0) + im.size, fill=128)
+        draw.line((0, im.size[1], im.size[0], 0), fill=128)
 
-    # write to stdout
-    im.save(sys.stdout, "PNG")
+        # write to stdout
+        im.save(sys.stdout, "PNG")
 
 
 Concepts
@@ -100,6 +100,25 @@ Example: Draw Partial Opacity Text
 
     out.show()
 
+Example: Draw Multiline Text
+----------------------------
+
+.. code-block:: python
+
+    from PIL import Image, ImageDraw, ImageFont
+
+    # create an image
+    out = Image.new("RGB", (150, 100), (255, 255, 255))
+
+    # get a font
+    fnt = ImageFont.truetype("Pillow/Tests/fonts/FreeMono.ttf", 40)
+    # get a drawing context
+    d = ImageDraw.Draw(out)
+
+    # draw multiline text
+    d.multiline_text((10,10), "Hello\nWorld", font=fnt, fill=(0, 0, 0))
+
+    out.show()
 
 
 Functions

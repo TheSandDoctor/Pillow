@@ -176,6 +176,7 @@ def COM(self, marker):
     n = i16(self.fp.read(2)) - 2
     s = ImageFile._safe_read(self.fp, n)
 
+    self.info["comment"] = s
     self.app["COM"] = s  # compatibility
     self.applist.append(("COM", s))
 
@@ -448,9 +449,9 @@ class JpegImageFile(ImageFile.ImageFile):
             raise ValueError("Invalid Filename")
 
         try:
-            _im = Image.open(path)
-            _im.load()
-            self.im = _im.im
+            with Image.open(path) as _im:
+                _im.load()
+                self.im = _im.im
         finally:
             try:
                 os.unlink(path)
@@ -616,17 +617,17 @@ def _save(im, fp, filename):
 
     dpi = [round(x) for x in info.get("dpi", (0, 0))]
 
-    quality = info.get("quality", 0)
+    quality = info.get("quality", -1)
     subsampling = info.get("subsampling", -1)
     qtables = info.get("qtables")
 
     if quality == "keep":
-        quality = 0
+        quality = -1
         subsampling = "keep"
         qtables = "keep"
     elif quality in presets:
         preset = presets[quality]
-        quality = 0
+        quality = -1
         subsampling = preset.get("subsampling", -1)
         qtables = preset.get("quantization")
     elif not isinstance(quality, int):
@@ -749,8 +750,8 @@ def _save(im, fp, filename):
         # CMYK can be bigger
         if im.mode == "CMYK":
             bufsize = 4 * im.size[0] * im.size[1]
-        # keep sets quality to 0, but the actual value may be high.
-        elif quality >= 95 or quality == 0:
+        # keep sets quality to -1, but the actual value may be high.
+        elif quality >= 95 or quality == -1:
             bufsize = 2 * im.size[0] * im.size[1]
         else:
             bufsize = im.size[0] * im.size[1]

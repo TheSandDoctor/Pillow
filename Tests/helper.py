@@ -5,14 +5,12 @@ Helper functions.
 import logging
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
-import unittest
 from io import BytesIO
 
 import pytest
-from PIL import Image, ImageMath
+from PIL import Image, ImageMath, features
 
 logger = logging.getLogger(__name__)
 
@@ -172,36 +170,13 @@ def skip_known_bad_test(msg=None):
         pytest.skip(msg or "Known bad test")
 
 
-class PillowTestCase(unittest.TestCase):
-    def delete_tempfile(self, path):
-        try:
-            os.remove(path)
-        except OSError:
-            pass  # report?
-
-    def tempfile(self, template):
-        assert template[:5] in ("temp.", "temp_")
-        fd, path = tempfile.mkstemp(template[4:], template[:4])
-        os.close(fd)
-
-        self.addCleanup(self.delete_tempfile, path)
-        return path
-
-    def open_withImagemagick(self, f):
-        if not imagemagick_available():
-            raise OSError()
-
-        outfile = self.tempfile("temp.png")
-        rc = subprocess.call(
-            [IMCONVERT, f, outfile], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-        )
-        if rc:
-            raise OSError
-        return Image.open(outfile)
+def skip_unless_feature(feature):
+    reason = "%s not available" % feature
+    return pytest.mark.skipif(not features.check(feature), reason=reason)
 
 
-@unittest.skipIf(sys.platform.startswith("win32"), "requires Unix or macOS")
-class PillowLeakTestCase(PillowTestCase):
+@pytest.mark.skipif(sys.platform.startswith("win32"), reason="Requires Unix or macOS")
+class PillowLeakTestCase:
     # requires unix/macOS
     iterations = 100  # count
     mem_limit = 512  # k
@@ -235,7 +210,7 @@ class PillowLeakTestCase(PillowTestCase):
             core()
             mem = self._get_mem_usage() - start_mem
             msg = "memory usage limit exceeded in iteration %d" % cycle
-            self.assertLess(mem, self.mem_limit, msg)
+            assert mem < self.mem_limit, msg
 
 
 # helpers
@@ -297,12 +272,8 @@ def on_github_actions():
 
 
 def on_ci():
-    # Travis and AppVeyor have "CI"
-    # Azure Pipelines has "TF_BUILD"
-    # GitHub Actions has "GITHUB_ACTIONS"
-    return (
-        "CI" in os.environ or "TF_BUILD" in os.environ or "GITHUB_ACTIONS" in os.environ
-    )
+    # GitHub Actions, Travis and AppVeyor have "CI"
+    return "CI" in os.environ
 
 
 def is_big_endian():

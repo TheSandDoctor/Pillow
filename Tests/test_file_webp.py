@@ -1,13 +1,11 @@
-import unittest
-
 import pytest
 from PIL import Image, WebPImagePlugin
 
 from .helper import (
-    PillowTestCase,
     assert_image_similar,
     assert_image_similar_tofile,
     hopper,
+    skip_unless_feature,
 )
 
 try:
@@ -18,23 +16,21 @@ except ImportError:
     HAVE_WEBP = False
 
 
-class TestUnsupportedWebp(PillowTestCase):
+class TestUnsupportedWebp:
     def test_unsupported(self):
         if HAVE_WEBP:
             WebPImagePlugin.SUPPORTED = False
 
         file_path = "Tests/images/hopper.webp"
-        pytest.warns(
-            UserWarning, lambda: self.assertRaises(IOError, Image.open, file_path)
-        )
+        pytest.warns(UserWarning, lambda: pytest.raises(OSError, Image.open, file_path))
 
         if HAVE_WEBP:
             WebPImagePlugin.SUPPORTED = True
 
 
-@unittest.skipUnless(HAVE_WEBP, "WebP support not installed")
-class TestFileWebp(PillowTestCase):
-    def setUp(self):
+@skip_unless_feature("webp")
+class TestFileWebp:
+    def setup_method(self):
         self.rgb_mode = "RGB"
 
     def test_version(self):
@@ -48,9 +44,9 @@ class TestFileWebp(PillowTestCase):
         """
 
         with Image.open("Tests/images/hopper.webp") as image:
-            self.assertEqual(image.mode, self.rgb_mode)
-            self.assertEqual(image.size, (128, 128))
-            self.assertEqual(image.format, "WEBP")
+            assert image.mode == self.rgb_mode
+            assert image.size == (128, 128)
+            assert image.format == "WEBP"
             image.load()
             image.getdata()
 
@@ -58,19 +54,19 @@ class TestFileWebp(PillowTestCase):
             # dwebp -ppm ../../Tests/images/hopper.webp -o hopper_webp_bits.ppm
             assert_image_similar_tofile(image, "Tests/images/hopper_webp_bits.ppm", 1.0)
 
-    def test_write_rgb(self):
+    def test_write_rgb(self, tmp_path):
         """
         Can we write a RGB mode file to webp without error.
         Does it have the bits we expect?
         """
 
-        temp_file = self.tempfile("temp.webp")
+        temp_file = str(tmp_path / "temp.webp")
 
         hopper(self.rgb_mode).save(temp_file)
         with Image.open(temp_file) as image:
-            self.assertEqual(image.mode, self.rgb_mode)
-            self.assertEqual(image.size, (128, 128))
-            self.assertEqual(image.format, "WEBP")
+            assert image.mode == self.rgb_mode
+            assert image.size == (128, 128)
+            assert image.format == "WEBP"
             image.load()
             image.getdata()
 
@@ -87,18 +83,18 @@ class TestFileWebp(PillowTestCase):
             target = hopper(self.rgb_mode)
             assert_image_similar(image, target, 12.0)
 
-    def test_write_unsupported_mode_L(self):
+    def test_write_unsupported_mode_L(self, tmp_path):
         """
         Saving a black-and-white file to WebP format should work, and be
         similar to the original file.
         """
 
-        temp_file = self.tempfile("temp.webp")
+        temp_file = str(tmp_path / "temp.webp")
         hopper("L").save(temp_file)
         with Image.open(temp_file) as image:
-            self.assertEqual(image.mode, self.rgb_mode)
-            self.assertEqual(image.size, (128, 128))
-            self.assertEqual(image.format, "WEBP")
+            assert image.mode == self.rgb_mode
+            assert image.size == (128, 128)
+            assert image.format == "WEBP"
 
             image.load()
             image.getdata()
@@ -106,18 +102,18 @@ class TestFileWebp(PillowTestCase):
 
             assert_image_similar(image, target, 10.0)
 
-    def test_write_unsupported_mode_P(self):
+    def test_write_unsupported_mode_P(self, tmp_path):
         """
         Saving a palette-based file to WebP format should work, and be
         similar to the original file.
         """
 
-        temp_file = self.tempfile("temp.webp")
+        temp_file = str(tmp_path / "temp.webp")
         hopper("P").save(temp_file)
         with Image.open(temp_file) as image:
-            self.assertEqual(image.mode, self.rgb_mode)
-            self.assertEqual(image.size, (128, 128))
-            self.assertEqual(image.format, "WEBP")
+            assert image.mode == self.rgb_mode
+            assert image.size == (128, 128)
+            assert image.format == "WEBP"
 
             image.load()
             image.getdata()
@@ -131,8 +127,10 @@ class TestFileWebp(PillowTestCase):
         """
 
         if _webp.HAVE_WEBPANIM:
-            self.assertRaises(TypeError, _webp.WebPAnimEncoder)
-        self.assertRaises(TypeError, _webp.WebPEncode)
+            with pytest.raises(TypeError):
+                _webp.WebPAnimEncoder()
+        with pytest.raises(TypeError):
+            _webp.WebPEncode()
 
     def test_WebPDecode_with_invalid_args(self):
         """
@@ -140,13 +138,15 @@ class TestFileWebp(PillowTestCase):
         """
 
         if _webp.HAVE_WEBPANIM:
-            self.assertRaises(TypeError, _webp.WebPAnimDecoder)
-        self.assertRaises(TypeError, _webp.WebPDecode)
+            with pytest.raises(TypeError):
+                _webp.WebPAnimDecoder()
+        with pytest.raises(TypeError):
+            _webp.WebPDecode()
 
-    def test_no_resource_warning(self):
+    def test_no_resource_warning(self, tmp_path):
         file_path = "Tests/images/hopper.webp"
         with Image.open(file_path) as image:
-            temp_file = self.tempfile("temp.webp")
+            temp_file = str(tmp_path / "temp.webp")
             pytest.warns(None, image.save, temp_file)
 
     def test_file_pointer_could_be_reused(self):
@@ -155,19 +155,18 @@ class TestFileWebp(PillowTestCase):
             Image.open(blob).load()
             Image.open(blob).load()
 
-    @unittest.skipUnless(
-        HAVE_WEBP and _webp.HAVE_WEBPANIM, "WebP save all not available"
-    )
-    def test_background_from_gif(self):
+    @skip_unless_feature("webp")
+    @skip_unless_feature("webp_anim")
+    def test_background_from_gif(self, tmp_path):
         with Image.open("Tests/images/chi.gif") as im:
             original_value = im.convert("RGB").getpixel((1, 1))
 
             # Save as WEBP
-            out_webp = self.tempfile("temp.webp")
+            out_webp = str(tmp_path / "temp.webp")
             im.save(out_webp, save_all=True)
 
         # Save as GIF
-        out_gif = self.tempfile("temp.gif")
+        out_gif = str(tmp_path / "temp.gif")
         Image.open(out_webp).save(out_gif)
 
         with Image.open(out_gif) as reread:
@@ -175,4 +174,4 @@ class TestFileWebp(PillowTestCase):
         difference = sum(
             [abs(original_value[i] - reread_value[i]) for i in range(0, 3)]
         )
-        self.assertLess(difference, 5)
+        assert difference < 5

@@ -229,7 +229,7 @@ extern void ImagingSectionLeave(ImagingSectionCookie* cookie);
 /* Exceptions */
 /* ---------- */
 
-extern void* ImagingError_IOError(void);
+extern void* ImagingError_OSError(void);
 extern void* ImagingError_MemoryError(void);
 extern void* ImagingError_ModeError(void); /* maps to ValueError by default */
 extern void* ImagingError_Mismatch(void); /* maps to ValueError by default */
@@ -339,6 +339,9 @@ extern Imaging ImagingChopSubtract(
     Imaging imIn1, Imaging imIn2, float scale, int offset);
 extern Imaging ImagingChopAddModulo(Imaging imIn1, Imaging imIn2);
 extern Imaging ImagingChopSubtractModulo(Imaging imIn1, Imaging imIn2);
+extern Imaging ImagingChopSoftLight(Imaging imIn1, Imaging imIn2);
+extern Imaging ImagingChopHardLight(Imaging imIn1, Imaging imIn2);
+extern Imaging ImagingOverlay(Imaging imIn1, Imaging imIn2);
 
 /* "1" images only */
 extern Imaging ImagingChopAnd(Imaging imIn1, Imaging imIn2);

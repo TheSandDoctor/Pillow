@@ -268,9 +268,9 @@ static const char* readonly = "image is readonly";
 /* static const char* no_content = "image has no content"; */
 
 void *
-ImagingError_IOError(void)
+ImagingError_OSError(void)
 {
-    PyErr_SetString(PyExc_IOError, "error when accessing file");
+    PyErr_SetString(PyExc_OSError, "error when accessing file");
     return NULL;
 }
 
@@ -2406,6 +2406,38 @@ _chop_subtract_modulo(ImagingObject* self, PyObject* args)
     return PyImagingNew(ImagingChopSubtractModulo(self->image, imagep->image));
 }
 
+static PyObject*
+_chop_soft_light(ImagingObject* self, PyObject* args)
+{
+    ImagingObject* imagep;
+
+    if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
+        return NULL;
+
+    return PyImagingNew(ImagingChopSoftLight(self->image, imagep->image));
+}
+
+static PyObject*
+_chop_hard_light(ImagingObject* self, PyObject* args)
+{
+    ImagingObject* imagep;
+
+    if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
+        return NULL;
+
+    return PyImagingNew(ImagingChopHardLight(self->image, imagep->image));
+}
+
+static PyObject*
+_chop_overlay(ImagingObject* self, PyObject* args)
+{
+    ImagingObject* imagep;
+
+    if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
+        return NULL;
+
+    return PyImagingNew(ImagingOverlay(self->image, imagep->image));
+}
 #endif
 
 
@@ -3325,6 +3357,10 @@ static struct PyMethodDef methods[] = {
     {"chop_and", (PyCFunction)_chop_and, 1},
     {"chop_or", (PyCFunction)_chop_or, 1},
     {"chop_xor", (PyCFunction)_chop_xor, 1},
+    {"chop_soft_light", (PyCFunction)_chop_soft_light, 1},
+    {"chop_hard_light", (PyCFunction)_chop_hard_light, 1},
+    {"chop_overlay", (PyCFunction)_chop_overlay, 1},
+
 #endif
 
 #ifdef WITH_UNSHARPMASK
@@ -3781,6 +3817,9 @@ extern PyObject* PyImaging_ListWindowsWin32(PyObject* self, PyObject* args);
 extern PyObject* PyImaging_EventLoopWin32(PyObject* self, PyObject* args);
 extern PyObject* PyImaging_DrawWmf(PyObject* self, PyObject* args);
 #endif
+#ifdef HAVE_XCB
+extern PyObject* PyImaging_GrabScreenX11(PyObject* self, PyObject* args);
+#endif
 
 /* Experimental path stuff (in path.c) */
 extern PyObject* PyPath_Create(ImagingObject* self, PyObject* args);
@@ -3853,12 +3892,15 @@ static PyMethodDef functions[] = {
 #ifdef _WIN32
     {"display", (PyCFunction)PyImaging_DisplayWin32, 1},
     {"display_mode", (PyCFunction)PyImaging_DisplayModeWin32, 1},
-    {"grabscreen", (PyCFunction)PyImaging_GrabScreenWin32, 1},
-    {"grabclipboard", (PyCFunction)PyImaging_GrabClipboardWin32, 1},
+    {"grabscreen_win32", (PyCFunction)PyImaging_GrabScreenWin32, 1},
+    {"grabclipboard_win32", (PyCFunction)PyImaging_GrabClipboardWin32, 1},
     {"createwindow", (PyCFunction)PyImaging_CreateWindowWin32, 1},
     {"eventloop", (PyCFunction)PyImaging_EventLoopWin32, 1},
     {"listwindows", (PyCFunction)PyImaging_ListWindowsWin32, 1},
     {"drawwmf", (PyCFunction)PyImaging_DrawWmf, 1},
+#endif
+#ifdef HAVE_XCB
+    {"grabscreen_x11", (PyCFunction)PyImaging_GrabScreenX11, 1},
 #endif
 
     /* Utilities */
@@ -3977,6 +4019,12 @@ setup_module(PyObject* m) {
 #endif
     PyDict_SetItemString(d, "libtiff_support_custom_tags", support_custom_tags);
   }
+#endif
+
+#ifdef HAVE_XCB
+    PyModule_AddObject(m, "HAVE_XCB", Py_True);
+#else
+    PyModule_AddObject(m, "HAVE_XCB", Py_False);
 #endif
 
     PyDict_SetItemString(d, "PILLOW_VERSION", PyUnicode_FromString(version));

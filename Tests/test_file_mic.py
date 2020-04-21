@@ -1,22 +1,13 @@
 import pytest
-from PIL import Image, ImagePalette, features
+from PIL import Image, ImagePalette
 
-from .helper import assert_image_similar, hopper
+from .helper import assert_image_similar, hopper, skip_unless_feature
 
-try:
-    from PIL import MicImagePlugin
-except ImportError:
-    olefile_installed = False
-else:
-    olefile_installed = True
-
+MicImagePlugin = pytest.importorskip(
+    "PIL.MicImagePlugin", reason="olefile not installed"
+)
+pytestmark = skip_unless_feature("libtiff")
 TEST_FILE = "Tests/images/hopper.mic"
-
-
-pytestmark = [
-    pytest.mark.skipif(not olefile_installed, reason="olefile package not installed"),
-    pytest.mark.skipif(not features.check("libtiff"), reason="libtiff not installed"),
-]
 
 
 def test_sanity():

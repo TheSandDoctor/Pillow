@@ -286,6 +286,7 @@ class pil_build_ext(build_ext):
             "webpmux",
             "jpeg2000",
             "imagequant",
+            "xcb",
         ]
 
         required = {"jpeg", "zlib"}
@@ -578,7 +579,7 @@ class pil_build_ext(build_ext):
                 try:
                     listdir = os.listdir(directory)
                 except Exception:
-                    # WindowsError, FileNotFoundError
+                    # OSError, FileNotFoundError
                     continue
                 for name in listdir:
                     if name.startswith("openjpeg-") and os.path.isfile(
@@ -681,6 +682,12 @@ class pil_build_ext(build_ext):
                 ):
                     feature.webpmux = "libwebpmux"
 
+        if feature.want("xcb"):
+            _dbg("Looking for xcb")
+            if _find_include_file(self, "xcb/xcb.h"):
+                if _find_library_file(self, "xcb"):
+                    feature.xcb = "xcb"
+
         for f in feature:
             if not getattr(feature, f) and feature.require(f):
                 if f in ("jpeg", "zlib"):
@@ -715,6 +722,9 @@ class pil_build_ext(build_ext):
         if feature.tiff:
             libs.append(feature.tiff)
             defs.append(("HAVE_LIBTIFF", None))
+        if feature.xcb:
+            libs.append(feature.xcb)
+            defs.append(("HAVE_XCB", None))
         if sys.platform == "win32":
             libs.extend(["kernel32", "user32", "gdi32"])
         if struct.unpack("h", b"\0\1")[0] == 1:
@@ -813,6 +823,7 @@ class pil_build_ext(build_ext):
             (feature.lcms, "LITTLECMS2"),
             (feature.webp, "WEBP"),
             (feature.webpmux, "WEBPMUX"),
+            (feature.xcb, "XCB (X protocol)"),
         ]
 
         all = 1
@@ -858,7 +869,8 @@ try:
         project_urls={
             "Documentation": "https://pillow.readthedocs.io",
             "Source": "https://github.com/python-pillow/Pillow",
-            "Funding": "https://tidelift.com/subscription/pkg/pypi-pillow",
+            "Funding": "https://tidelift.com/subscription/pkg/pypi-pillow?"
+            "utm_source=pypi-pillow&utm_medium=pypi",
         },
         classifiers=[
             "Development Status :: 6 - Mature",

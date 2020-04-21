@@ -1015,10 +1015,6 @@ class TiffImageFile(ImageFile.ImageFile):
             self.seek(current)
         return self._n_frames
 
-    @property
-    def is_animated(self):
-        return self._is_animated
-
     def seek(self, frame):
         """Select a given frame as current image"""
         if not self._seek_check(frame):
@@ -1052,7 +1048,7 @@ class TiffImageFile(ImageFile.ImageFile):
             if self.__next == 0:
                 self._n_frames = frame + 1
             if len(self._frame_pos) == 1:
-                self._is_animated = self.__next != 0
+                self.is_animated = self.__next != 0
             self.__frame += 1
         self.fp.seek(self._frame_pos[frame])
         self.tag_v2.load(self.fp)
@@ -1066,7 +1062,7 @@ class TiffImageFile(ImageFile.ImageFile):
         return self.__frame
 
     def load(self):
-        if self.use_load_libtiff:
+        if self.tile and self.use_load_libtiff:
             return self._load_libtiff()
         return super().load()
 
@@ -1087,19 +1083,14 @@ class TiffImageFile(ImageFile.ImageFile):
 
         # allow closing if we're on the first frame, there's no next
         # This is the ImageFile.load path only, libtiff specific below.
-        if not self._is_animated:
+        if not self.is_animated:
             self._close_exclusive_fp_after_loading = True
 
     def _load_libtiff(self):
         """ Overload method triggered when we detect a compressed tiff
             Calls out to libtiff """
 
-        pixel = Image.Image.load(self)
-
-        if self.tile is None:
-            raise OSError("cannot load this image")
-        if not self.tile:
-            return pixel
+        Image.Image.load(self)
 
         self.load_prepare()
 
@@ -1123,7 +1114,7 @@ class TiffImageFile(ImageFile.ImageFile):
             if hasattr(self.fp, "flush"):
                 self.fp.flush()
         except OSError:
-            # io.BytesIO have a fileno, but returns an IOError if
+            # io.BytesIO have a fileno, but returns an OSError if
             # it doesn't use a file descriptor.
             fp = False
 
@@ -1138,7 +1129,7 @@ class TiffImageFile(ImageFile.ImageFile):
         except ValueError:
             raise OSError("Couldn't set the image")
 
-        close_self_fp = self._exclusive_fp and not self._is_animated
+        close_self_fp = self._exclusive_fp and not self.is_animated
         if hasattr(self.fp, "getvalue"):
             # We've got a stringio like thing passed in. Yay for all in memory.
             # The decoder needs the entire file in one shot, so there's not
@@ -1147,7 +1138,7 @@ class TiffImageFile(ImageFile.ImageFile):
             # underlying string for stringio.
             #
             # Rearranging for supporting byteio items, since they have a fileno
-            # that returns an IOError if there's no underlying fp. Easier to
+            # that returns an OSError if there's no underlying fp. Easier to
             # deal with here by reordering.
             if DEBUG:
                 print("have getvalue. just sending in a string from getvalue")

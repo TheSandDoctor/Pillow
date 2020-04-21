@@ -3,12 +3,12 @@ import io
 import pytest
 from PIL import features
 
+from .helper import skip_unless_feature
+
 try:
     from PIL import _webp
-
-    HAVE_WEBP = True
 except ImportError:
-    HAVE_WEBP = False
+    pass
 
 
 def test_check():
@@ -21,18 +21,18 @@ def test_check():
         assert features.check_feature(feature) == features.check(feature)
 
 
-@pytest.mark.skipif(not HAVE_WEBP, reason="WebP not available")
+@skip_unless_feature("webp")
 def test_webp_transparency():
     assert features.check("transp_webp") != _webp.WebPDecoderBuggyAlpha()
     assert features.check("transp_webp") == _webp.HAVE_TRANSPARENCY
 
 
-@pytest.mark.skipif(not HAVE_WEBP, reason="WebP not available")
+@skip_unless_feature("webp")
 def test_webp_mux():
     assert features.check("webp_mux") == _webp.HAVE_WEBPMUX
 
 
-@pytest.mark.skipif(not HAVE_WEBP, reason="WebP not available")
+@skip_unless_feature("webp")
 def test_webp_anim():
     assert features.check("webp_anim") == _webp.HAVE_WEBPANIM
 
@@ -42,6 +42,13 @@ def test_check_modules():
         assert features.check_module(feature) in [True, False]
     for feature in features.codecs:
         assert features.check_codec(feature) in [True, False]
+
+
+def test_check_warns_on_nonexistent():
+    with pytest.warns(UserWarning) as cm:
+        has_feature = features.check("typo")
+    assert has_feature is False
+    assert str(cm[-1].message) == "Unknown feature 'typo'."
 
 
 def test_supported_modules():

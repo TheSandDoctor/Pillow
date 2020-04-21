@@ -7,6 +7,7 @@ jobs:
 
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         docker: [
           alpine,
@@ -45,7 +46,6 @@ jobs:
         sudo chown -R runner $GITHUB_WORKSPACE
 
     - name: After success
-      if: success()
       run: |
         PATH="$PATH:~/.local/bin"
         docker start pillow_container
@@ -57,14 +57,8 @@ jobs:
       env:
         MATRIX_DOCKER: ${{ matrix.docker }}
 
-    - name: Prepare coverage token
-      if: success() && github.repository == 'python-pillow/Pillow'
-      run: cp .github/codecov-upstream.yml codecov.yml
-
     - name: Upload coverage
-      if: success()
       uses: codecov/codecov-action@v1
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
         flags: GHA_Docker
         name: ${{ matrix.docker }}

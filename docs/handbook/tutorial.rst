@@ -29,7 +29,7 @@ bands in the image, and also the pixel type and depth. Common modes are “L”
 (luminance) for greyscale images, “RGB” for true color images, and “CMYK” for
 pre-press images.
 
-If the file cannot be opened, an :py:exc:`IOError` exception is raised.
+If the file cannot be opened, an :py:exc:`OSError` exception is raised.
 
 Once you have an instance of the :py:class:`~PIL.Image.Image` class, you can use
 the methods defined by this class to process and manipulate the image. For
@@ -74,8 +74,9 @@ Convert files to JPEG
         outfile = f + ".jpg"
         if infile != outfile:
             try:
-                Image.open(infile).save(outfile)
-            except IOError:
+                with Image.open(infile) as im:
+                    im.save(outfile)
+            except OSError:
                 print("cannot convert", infile)
 
 A second argument can be supplied to the :py:meth:`~PIL.Image.Image.save`
@@ -99,7 +100,7 @@ Create JPEG thumbnails
                 with Image.open(infile) as im:
                     im.thumbnail(size)
                     im.save(outfile, "JPEG")
-            except IOError:
+            except OSError:
                 print("cannot create thumbnail for", infile)
 
 It is important to note that the library doesn’t decode or load the raster data
@@ -124,7 +125,7 @@ Identify Image Files
         try:
             with Image.open(infile) as im:
                 print(infile, im.format, "%dx%d" % im.size, im.mode)
-        except IOError:
+        except OSError:
             pass
 
 Cutting, pasting, and merging images
@@ -449,7 +450,7 @@ context manager::
         ...
 
 If everything goes well, the result is an :py:class:`PIL.Image.Image` object.
-Otherwise, an :exc:`IOError` exception is raised.
+Otherwise, an :exc:`OSError` exception is raised.
 
 You can use a file-like object instead of the filename. The object must
 implement :py:meth:`~file.read`, :py:meth:`~file.seek` and

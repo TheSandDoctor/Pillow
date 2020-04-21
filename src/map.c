@@ -70,7 +70,7 @@ PyImaging_MapperNew(const char* filename, int readonly)
         FILE_ATTRIBUTE_NORMAL,
         NULL);
     if (mapper->hFile == (HANDLE)-1) {
-        PyErr_SetString(PyExc_IOError, "cannot open file");
+        PyErr_SetString(PyExc_OSError, "cannot open file");
         Py_DECREF(mapper);
         return NULL;
     }
@@ -81,7 +81,7 @@ PyImaging_MapperNew(const char* filename, int readonly)
         0, 0, NULL);
     if (mapper->hMap == (HANDLE)-1) {
         CloseHandle(mapper->hFile);
-        PyErr_SetString(PyExc_IOError, "cannot map file");
+        PyErr_SetString(PyExc_OSError, "cannot map file");
         Py_DECREF(mapper);
         return NULL;
     }
@@ -209,7 +209,7 @@ mapping_readimage(ImagingMapperObject* mapper, PyObject* args)
     size = ysize * stride;
 
     if (mapper->offset + size > mapper->size) {
-        PyErr_SetString(PyExc_IOError, "image file truncated");
+        PyErr_SetString(PyExc_OSError, "image file truncated");
         return NULL;
     }
 
@@ -354,17 +354,21 @@ PyImaging_MapBuffer(PyObject* self, PyObject* args)
 
     if (view.len < 0) {
         PyErr_SetString(PyExc_ValueError, "buffer has negative size");
+        PyBuffer_Release(&view);
         return NULL;
     }
     if (offset + size > view.len) {
         PyErr_SetString(PyExc_ValueError, "buffer is not large enough");
+        PyBuffer_Release(&view);
         return NULL;
     }
 
     im = ImagingNewPrologueSubtype(
         mode, xsize, ysize, sizeof(ImagingBufferInstance));
-    if (!im)
+    if (!im) {
+        PyBuffer_Release(&view);
         return NULL;
+    }
 
     /* setup file pointers */
     if (ystep > 0)

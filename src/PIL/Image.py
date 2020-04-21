@@ -39,12 +39,36 @@ from collections.abc import Callable, MutableMapping
 from pathlib import Path
 
 # VERSION was removed in Pillow 6.0.0.
-# PILLOW_VERSION was removed in Pillow 7.0.0.
+# PILLOW_VERSION is deprecated and will be removed in a future release.
 # Use __version__ instead.
-from . import ImageMode, TiffTags, UnidentifiedImageError, __version__, _plugins
+from . import (
+    ImageMode,
+    TiffTags,
+    UnidentifiedImageError,
+    __version__,
+    _plugins,
+    _raise_version_warning,
+)
 from ._binary import i8, i32le
 
 from ._util import deferred_error, isPath
+
+if sys.version_info >= (3, 7):
+
+    def __getattr__(name):
+        if name == "PILLOW_VERSION":
+            _raise_version_warning()
+            return __version__
+        raise AttributeError("module '{}' has no attribute '{}'".format(__name__, name))
+
+
+else:
+
+    from . import PILLOW_VERSION
+
+    # Silence warning
+    assert PILLOW_VERSION
+
 
 logger = logging.getLogger(__name__)
 
@@ -1872,7 +1896,11 @@ class Image:
             factor_y = int((box[3] - box[1]) / size[1] / reducing_gap) or 1
             if factor_x > 1 or factor_y > 1:
                 reduce_box = self._get_safe_box(size, resample, box)
-                self = self.reduce((factor_x, factor_y), box=reduce_box)
+                factor = (factor_x, factor_y)
+                if callable(self.reduce):
+                    self = self.reduce(factor, box=reduce_box)
+                else:
+                    self = Image.reduce(self, factor, box=reduce_box)
                 box = (
                     (box[0] - reduce_box[0]) / factor_x,
                     (box[1] - reduce_box[1]) / factor_y,
@@ -2058,7 +2086,7 @@ class Image:
         :returns: None
         :exception ValueError: If the output format could not be determined
            from the file name.  Use the format option to solve this.
-        :exception IOError: If the file could not be written.  The file
+        :exception OSError: If the file could not be written.  The file
            may have been created, and may contain partial data.
         """
 
@@ -2242,20 +2270,22 @@ class Image:
         :returns: None
         """
 
-        # preserve aspect ratio
-        x, y = self.size
-        if x > size[0]:
-            y = max(round(y * size[0] / x), 1)
-            x = round(size[0])
-        if y > size[1]:
-            x = max(round(x * size[1] / y), 1)
-            y = round(size[1])
-        size = x, y
-        box = None
-
-        if size == self.size:
+        x, y = map(math.floor, size)
+        if x >= self.width and y >= self.height:
             return
 
+        def round_aspect(number, key):
+            return max(min(math.floor(number), math.ceil(number), key=key), 1)
+
+        # preserve aspect ratio
+        aspect = self.width / self.height
+        if x / y >= aspect:
+            x = round_aspect(y * aspect, key=lambda n: abs(aspect - n / y))
+        else:
+            y = round_aspect(x / aspect, key=lambda n: abs(aspect - x / n))
+        size = (x, y)
+
+        box = None
         if reducing_gap is not None:
             res = self.draft(None, (size[0] * reducing_gap, size[1] * reducing_gap))
             if res is not None:

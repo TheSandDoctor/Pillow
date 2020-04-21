@@ -158,7 +158,7 @@ _getdc(ImagingDisplayObject* display, PyObject* args)
 
     dc = GetDC(window);
     if (!dc) {
-        PyErr_SetString(PyExc_IOError, "cannot create dc");
+        PyErr_SetString(PyExc_OSError, "cannot create dc");
         return NULL;
     }
 
@@ -397,7 +397,7 @@ PyImaging_GrabScreenWin32(PyObject* self, PyObject* args)
     return Py_BuildValue("(ii)(ii)N", x, y, width, height, buffer);
 
 error:
-    PyErr_SetString(PyExc_IOError, "screen grab failed");
+    PyErr_SetString(PyExc_OSError, "screen grab failed");
 
     DeleteDC(screen_copy);
     DeleteDC(screen);
@@ -677,7 +677,7 @@ PyImaging_CreateWindowWin32(PyObject* self, PyObject* args)
         );
 
     if (!wnd) {
-        PyErr_SetString(PyExc_IOError, "failed to create window");
+        PyErr_SetString(PyExc_OSError, "failed to create window");
         return NULL;
     }
 
@@ -755,7 +755,7 @@ PyImaging_DrawWmf(PyObject* self, PyObject* args)
     }
 
     if (!meta) {
-        PyErr_SetString(PyExc_IOError, "cannot load metafile");
+        PyErr_SetString(PyExc_OSError, "cannot load metafile");
         return NULL;
     }
 
@@ -774,12 +774,12 @@ PyImaging_DrawWmf(PyObject* self, PyObject* args)
         );
 
     if (!bitmap) {
-        PyErr_SetString(PyExc_IOError, "cannot create bitmap");
+        PyErr_SetString(PyExc_OSError, "cannot create bitmap");
         goto error;
     }
 
     if (!SelectObject(dc, bitmap)) {
-        PyErr_SetString(PyExc_IOError, "cannot select bitmap");
+        PyErr_SetString(PyExc_OSError, "cannot select bitmap");
         goto error;
     }
 
@@ -793,7 +793,7 @@ PyImaging_DrawWmf(PyObject* self, PyObject* args)
     FillRect(dc, &rect, GetStockObject(WHITE_BRUSH));
 
     if (!PlayEnhMetaFile(dc, meta, &rect)) {
-        PyErr_SetString(PyExc_IOError, "cannot render metafile");
+        PyErr_SetString(PyExc_OSError, "cannot render metafile");
         goto error;
     }
 
@@ -815,3 +815,88 @@ error:
 }
 
 #endif /* _WIN32 */
+
+/* -------------------------------------------------------------------- */
+/* X11 support	*/
+
+#ifdef HAVE_XCB
+#include <xcb/xcb.h>
+
+/* -------------------------------------------------------------------- */
+/* X11 screen grabber */
+
+PyObject*
+PyImaging_GrabScreenX11(PyObject* self, PyObject* args)
+{
+    int width, height;
+    char* display_name;
+    xcb_connection_t* connection;
+    int screen_number;
+    xcb_screen_iterator_t iter;
+    xcb_screen_t* screen = NULL;
+    xcb_get_image_reply_t* reply;
+    xcb_generic_error_t* error;
+    PyObject* buffer = NULL;
+
+    if (!PyArg_ParseTuple(args, "|z", &display_name))
+        return NULL;
+
+    /* connect to X and get screen data */
+
+    connection = xcb_connect(display_name, &screen_number);
+    if (xcb_connection_has_error(connection)) {
+        PyErr_Format(PyExc_OSError, "X connection failed: error %i", xcb_connection_has_error(connection));
+        xcb_disconnect(connection);
+        return NULL;
+    }
+
+    iter = xcb_setup_roots_iterator(xcb_get_setup(connection));
+    for (; iter.rem; --screen_number, xcb_screen_next(&iter)) {
+        if (screen_number == 0) {
+            screen = iter.data;
+            break;
+        }
+    }
+    if (screen == NULL || screen->root == 0) {
+        // this case is usually caught with "X connection failed: error 6" above
+        xcb_disconnect(connection);
+        PyErr_SetString(PyExc_OSError, "X screen not found");
+        return NULL;
+    }
+
+    width = screen->width_in_pixels;
+    height = screen->height_in_pixels;
+
+    /* get image data */
+
+    reply = xcb_get_image_reply(connection,
+                                xcb_get_image(connection, XCB_IMAGE_FORMAT_Z_PIXMAP, screen->root,
+                                              0, 0, width, height, 0x00ffffff),
+                                &error);
+    if (reply == NULL) {
+        PyErr_Format(PyExc_OSError, "X get_image failed: error %i (%i, %i, %i)",
+                     error->error_code, error->major_code, error->minor_code, error->resource_id);
+        free(error);
+        xcb_disconnect(connection);
+        return NULL;
+    }
+
+    /* store data in Python buffer */
+
+    if (reply->depth == 24) {
+        buffer = PyBytes_FromStringAndSize((char*)xcb_get_image_data(reply),
+                                           xcb_get_image_data_length(reply));
+    } else {
+        PyErr_Format(PyExc_OSError, "unsupported bit depth: %i", reply->depth);
+    }
+
+    free(reply);
+    xcb_disconnect(connection);
+
+    if (!buffer)
+        return NULL;
+
+    return Py_BuildValue("(ii)N", width, height, buffer);
+}
+
+#endif /* HAVE_XCB */

@@ -12,6 +12,26 @@ Deprecated features
 Below are features which are considered deprecated. Where appropriate,
 a ``DeprecationWarning`` is issued.
 
+ImageFile.raise_ioerror
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. deprecated:: 7.2.0
+
+``IOError`` was merged into ``OSError`` in Python 3.3. So, ``ImageFile.raise_ioerror``
+is now deprecated and will be removed in a future released. Use
+``ImageFile.raise_oserror`` instead.
+
+PILLOW_VERSION constant
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. deprecated:: 5.2.0
+
+``PILLOW_VERSION`` has been deprecated and will be removed in a future release. Use
+``__version__`` instead.
+
+It was initially removed in Pillow 7.0.0, but brought back in 7.1.0 to give projects
+more time to upgrade.
+
 ImageCms.CmsProfile attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -68,13 +88,6 @@ Use instead:
 
     with Image.open("hopper.png") as im:
         im.save("out.jpg")
-
-PILLOW_VERSION constant
-~~~~~~~~~~~~~~~~~~~~~~~
-
-*Removed in version 7.0.0.*
-
-``PILLOW_VERSION`` has been removed. Use ``__version__`` instead.
 
 PIL.*ImagePlugin.__version__ attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -154,4 +167,4 @@ PIL.OleFileIO
 PIL.OleFileIO was removed as a vendored file and in Pillow 4.0.0 (2017-01) in favour of
 the upstream olefile Python package, and replaced with an ``ImportError`` in 5.0.0
 (2018-01). The deprecated file has now been removed from Pillow. If needed, install from
-PyPI (eg. ``pip install olefile``).
+PyPI (eg. ``python3 -m pip install olefile``).

@@ -139,11 +139,11 @@ geterror(int code)
 
     for (i = 0; ft_errors[i].message; i++)
         if (ft_errors[i].code == code) {
-            PyErr_SetString(PyExc_IOError, ft_errors[i].message);
+            PyErr_SetString(PyExc_OSError, ft_errors[i].message);
             return NULL;
         }
 
-    PyErr_SetString(PyExc_IOError, "unknown freetype error");
+    PyErr_SetString(PyExc_OSError, "unknown freetype error");
     return NULL;
 }
 
@@ -259,7 +259,7 @@ getfont(PyObject* self_, PyObject* args, PyObject* kw)
 
     if (!library) {
         PyErr_SetString(
-            PyExc_IOError,
+            PyExc_OSError,
             "failed to initialize FreeType library"
             );
         return NULL;
@@ -564,9 +564,10 @@ text_layout_fallback(PyObject* string, FontObject* self, const char* dir, PyObje
         if (kerning && last_index && (*glyph_info)[i].index) {
             FT_Vector delta;
             if (FT_Get_Kerning(self->face, last_index, (*glyph_info)[i].index,
-                           ft_kerning_default,&delta) == 0)
-            (*glyph_info)[i-1].x_advance += PIXEL(delta.x);
-            (*glyph_info)[i-1].y_advance += PIXEL(delta.y);
+                           ft_kerning_default,&delta) == 0) {
+                (*glyph_info)[i-1].x_advance += PIXEL(delta.x);
+                (*glyph_info)[i-1].y_advance += PIXEL(delta.y);
+            }
         }
 
         (*glyph_info)[i].x_advance = glyph->metrics.horiAdvance;
@@ -782,9 +783,6 @@ font_render(FontObject* self, PyObject* args)
     im = (Imaging) id;
     /* Note: bitmap fonts within ttf fonts do not work, see #891/pr#960 */
     load_flags = FT_LOAD_NO_BITMAP;
-    if (stroker == NULL) {
-        load_flags |= FT_LOAD_RENDER;
-    }
     if (mask) {
         load_flags |= FT_LOAD_TARGET_MONO;
     }
@@ -792,7 +790,7 @@ font_render(FontObject* self, PyObject* args)
     ascender = 0;
     for (i = 0; i < count; i++) {
         index = glyph_info[i].index;
-        error = FT_Load_Glyph(self->face, index, load_flags);
+        error = FT_Load_Glyph(self->face, index, load_flags | FT_LOAD_RENDER);
         if (error) {
             return geterror(error);
         }
@@ -804,6 +802,10 @@ font_render(FontObject* self, PyObject* args)
         temp -= PIXEL(glyph_info[i].y_offset);
         if (temp > ascender)
             ascender = temp;
+    }
+
+    if (stroker == NULL) {
+        load_flags |= FT_LOAD_RENDER;
     }
 
     x = y = 0;
@@ -908,7 +910,7 @@ font_render(FontObject* self, PyObject* args)
     (FREETYPE_MAJOR == 2 && FREETYPE_MINOR > 9) ||\
     (FREETYPE_MAJOR == 2 && FREETYPE_MINOR == 9 && FREETYPE_PATCH == 1)
     static PyObject*
-    font_getvarnames(FontObject* self, PyObject* args)
+    font_getvarnames(FontObject* self)
     {
         int error;
         FT_UInt i, j, num_namedstyles, name_count;
@@ -947,7 +949,7 @@ font_render(FontObject* self, PyObject* args)
     }
 
     static PyObject*
-    font_getvaraxes(FontObject* self, PyObject* args)
+    font_getvaraxes(FontObject* self)
     {
         int error;
         FT_UInt i, j, num_axis, name_count;
@@ -1077,8 +1079,8 @@ static PyMethodDef font_methods[] = {
 #if FREETYPE_MAJOR > 2 ||\
     (FREETYPE_MAJOR == 2 && FREETYPE_MINOR > 9) ||\
     (FREETYPE_MAJOR == 2 && FREETYPE_MINOR == 9 && FREETYPE_PATCH == 1)
-    {"getvarnames", (PyCFunction) font_getvarnames, METH_VARARGS },
-    {"getvaraxes", (PyCFunction) font_getvaraxes, METH_VARARGS },
+    {"getvarnames", (PyCFunction) font_getvarnames, METH_NOARGS },
+    {"getvaraxes", (PyCFunction) font_getvaraxes, METH_NOARGS },
     {"setvarname", (PyCFunction) font_setvarname, METH_VARARGS},
     {"setvaraxes", (PyCFunction) font_setvaraxes, METH_VARARGS},
 #endif

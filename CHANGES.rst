@@ -2,8 +2,83 @@
 Changelog (Pillow)
 ==================
 
-7.1.0 (unreleased)
+7.2.0 (unreleased)
 ------------------
+
+- Fixed bug when unpickling TIFF images #4565
+  [radarhere]
+
+- Fix pickling WebP #4561
+  [hugovk, radarhere]
+
+- Raise an EOFError when seeking too far in PNG #4528
+  [radarhere]
+
+7.1.1 (2020-04-02)
+------------------
+
+- Fix regression seeking and telling PNGs #4512 #4514
+  [hugovk, radarhere]
+
+7.1.0 (2020-04-01)
+------------------
+
+- Fix multiple OOB reads in FLI decoding #4503
+  [wiredfool]
+
+- Fix buffer overflow in SGI-RLE decoding #4504
+  [wiredfool, hugovk]
+
+- Fix bounds overflow in JPEG 2000 decoding #4505
+  [wiredfool]
+
+- Fix bounds overflow in PCX decoding #4506
+  [wiredfool]
+
+- Fix 2 buffer overflows in TIFF decoding #4507
+  [wiredfool]
+
+- Add APNG support #4243
+  [pmrowla, radarhere, hugovk]
+
+- ImageGrab.grab() for Linux with XCB #4260
+  [nulano, radarhere]
+
+- Added three new channel operations #4230
+  [dwastberg, radarhere]
+
+- Prevent masking of Image reduce method in Jpeg2KImagePlugin #4474
+  [radarhere, homm]
+
+- Added reading of earlier ImageMagick PNG EXIF data #4471
+  [radarhere]
+
+- Fixed endian handling for I;16 getextrema #4457
+  [radarhere]
+
+- Release buffer if function returns prematurely #4381
+  [radarhere]
+
+- Add JPEG comment to info dictionary #4455
+  [radarhere]
+
+- Fix size calculation of Image.thumbnail() #4404
+  [orlnub123]
+
+- Fixed stroke on FreeType < 2.9 #4401
+  [radarhere]
+
+- If present, only use alpha channel for bounding box #4454
+  [radarhere]
+
+- Warn if an unknown feature is passed to features.check() #4438
+  [jdufresne]
+
+- Fix Name field length when saving IM images #4424
+  [hugovk, radarhere]
+
+- Allow saving of zero quality JPEG images #4440
+  [radarhere]
 
 - Allow explicit zero width to hide outline #4334
   [radarhere]
